@@ -4,7 +4,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import info.celsul.car.adapter.CarItemAdapter
 import info.celsul.car.databinding.ActivityMainBinding
+import info.celsul.car.model.CarItem
+import info.celsul.car.service.RetrofitClient
+import info.celsul.car.service.safeApiCall
+import info.celsul.car.service.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,7 +48,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupView() {
-        // TODO
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            binding.swipeRefreshLayout.isRefreshing = true
+            fetchItems()
+        }
+        binding.addCta.setOnClickListener {
+            startActivity(NewItemActivity.newIntent(this))
+        }
     }
 
     private fun requestLocationPermission() {
@@ -46,7 +63,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchItems() {
-        // TODO
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = safeApiCall { RetrofitClient.apiService.getItems() }
+
+            // Alterando execução para Main thread
+            withContext(Dispatchers.Main) {
+                binding.swipeRefreshLayout.isRefreshing = false
+                when (result) {
+                    is Result.Error -> {}
+                    is Result.Success -> handleOnSuccess(result.data)
+                }
+            }
+        }
+    }
+
+    private fun handleOnSuccess(data: List<CarItem>) {
+        val adapter = CarItemAdapter(data) {
+            // listener do item clicado
+            startActivity(ItemDetailActivity.newIntent(
+                this,
+                it.id
+            ))
+        }
+        binding.recyclerView.adapter = adapter
     }
 
     companion object {

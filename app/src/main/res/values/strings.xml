@@ -5,4 +5,9 @@
     <string name="hint_cellphone">Celular</string>
     <string name="code_brazil">+55</string>
     <string name="verify_sms">Verificar SMS</string>
+    <string name="error_create">Erro ao criar registro de carro</string>
+    <string name="success_create">Carro %1$s criado com sucesso</string>
+    <string name="error_validate_form">Por favor, preencha o campo: %1$s</string>
+    <string name="error_validate_take_picture">Por favor, tire uma foto</string>
+    <string name="item_year">Fabricado em %1$s</string>
 </resources>
