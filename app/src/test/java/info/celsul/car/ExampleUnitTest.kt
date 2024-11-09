@@ -1,4 +1,4 @@
-package com.example.myapitest
+package info.celsul.car
 
 import org.junit.Test
 
