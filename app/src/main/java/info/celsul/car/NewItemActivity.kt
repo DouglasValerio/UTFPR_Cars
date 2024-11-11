@@ -6,11 +6,14 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,24 +25,32 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.storage.FirebaseStorage
 import info.celsul.car.databinding.ActivityNewItemBinding
 import info.celsul.car.model.CarItem
 import info.celsul.car.model.CarLocation
 import info.celsul.car.service.RetrofitClient
 import info.celsul.car.service.safeApiCall
 import info.celsul.car.service.Result
+import info.celsul.car.ui.loadUrl
+import info.celsul.car.ui.setImageFromPath
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.UUID
 
-class NewItemActivity : AppCompatActivity() {
+class NewItemActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityNewItemBinding
 
     private lateinit var mMap: GoogleMap
@@ -53,7 +64,9 @@ class NewItemActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            binding.imageUrl.setText("Imagem Obtida")
+            binding.image.setImageFromPath(imageFile!!)
+            binding.takePictureCta.visibility = View.GONE
+            binding.imageContent.visibility = View.VISIBLE
         }
     }
 
@@ -62,78 +75,77 @@ class NewItemActivity : AppCompatActivity() {
         binding = ActivityNewItemBinding.inflate(layoutInflater)
         setContentView(binding.root)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-//        setupGoogleMap()
+        setupGoogleMap()
         setupView()
     }
 
-//    override fun onMapReady(googleMap: GoogleMap) {
-//        mMap = googleMap
-//        binding.mapContent.visibility = View.VISIBLE
-//        getDeviceLocation()
-//        mMap.setOnMapClickListener { latLng: LatLng ->
-//            // Limpar marcador anterior, se existir
-//            selectedMarker?.remove()
-//
-//            selectedMarker = mMap.addMarker(
-//                MarkerOptions()
-//                    .position(latLng)
-//                    .draggable(true)
-//                    .title("Lat: ${latLng.latitude}, Long: ${latLng.longitude}")
-//            )
-//        }
-//    }
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        binding.mapContent.visibility = View.VISIBLE
+        getDeviceLocation()
+        mMap.setOnMapClickListener { latLng: LatLng ->
+            selectedMarker?.remove()
 
-//    private fun uploadImageToFirebase() {
-//        // Inicializar o Firebase Storage
-//        val storageRef = FirebaseStorage.getInstance().reference
-//
-//        // criar uma referência para o arquivo no Firebase
-//        val imagesRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
-//
-//        // converter o Bitmap para ByteArrayOutputStream
-//        val baos = ByteArrayOutputStream()
-//        val imageBitmap = BitmapFactory.decodeFile(imageFile!!.path)
-//        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-//        val data = baos.toByteArray()
-//
-//        // Desabilita botões para evitar duplo click
-//        binding.loadImageProgress.visibility = View.VISIBLE
-//        binding.takePictureCta.isEnabled = false
-//        binding.saveCta.isEnabled = false
-//
-//        imagesRef.putBytes(data)
-//            .addOnFailureListener {
-//                binding.loadImageProgress.visibility = View.GONE
-//                binding.takePictureCta.isEnabled = true
-//                binding.saveCta.isEnabled = true
-//                Toast.makeText(this, "Falha ao realizar o upload", Toast.LENGTH_SHORT).show()
-//            }
-//            .addOnSuccessListener {
-//                binding.loadImageProgress.visibility = View.GONE
-//                binding.takePictureCta.isEnabled = true
-//                binding.saveCta.isEnabled = true
-//                imagesRef.downloadUrl.addOnSuccessListener { uri ->
-//                    saveData(uri.toString())
-//                }
-//            }
-//    }
+            selectedMarker = mMap.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .draggable(true)
+                    .title("Lat: ${latLng.latitude}, Long: ${latLng.longitude}")
+            )
+        }
+    }
 
-//    private fun setupGoogleMap() {
-//        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-//        mapFragment.getMapAsync(this)
-//    }
+    private fun uploadImageToFirebase() {
+        // Inicializar o Firebase Storage
+        val storageRef = FirebaseStorage.getInstance().reference
+
+        // criar uma referência para o arquivo no Firebase
+        val imagesRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
+
+        // converter o Bitmap para ByteArrayOutputStream
+        val baos = ByteArrayOutputStream()
+        val imageBitmap = BitmapFactory.decodeFile(imageFile!!.path)
+        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
+
+        // Desabilita botões para evitar duplo click
+        binding.loadImageProgress.visibility = View.VISIBLE
+        binding.takePictureCta.isEnabled = false
+        binding.saveCta.isEnabled = false
+
+        imagesRef.putBytes(data)
+            .addOnFailureListener {
+                binding.loadImageProgress.visibility = View.GONE
+                binding.takePictureCta.isEnabled = true
+                binding.saveCta.isEnabled = true
+                Toast.makeText(this, "Falha ao realizar o upload", Toast.LENGTH_SHORT).show()
+            }
+            .addOnSuccessListener {
+                binding.loadImageProgress.visibility = View.GONE
+                binding.takePictureCta.isEnabled = true
+                binding.saveCta.isEnabled = true
+                imagesRef.downloadUrl.addOnSuccessListener { uri ->
+                    saveData(uri.toString())
+                }
+            }.addOnProgressListener {
+                val progress = (100.0 * it.bytesTransferred) / it.totalByteCount
+                binding.loadImageProgress.progress = progress.toInt()
+            }
+    }
+
+    private fun setupGoogleMap() {
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+    }
 
     private fun getDeviceLocation() {
-        // Verificar permissão de Localização
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // Permissão já concedida
             loadCurrentLocation()
         } else {
-            // Usuário ainda não tem permissão, vai pedir a permissão de Localização
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -148,6 +160,14 @@ class NewItemActivity : AppCompatActivity() {
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location ->
             val currentLocation = LatLng(location.latitude, location.longitude)
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15f))
+            selectedMarker?.remove()
+
+            selectedMarker = mMap.addMarker(
+                MarkerOptions()
+                    .position(currentLocation)
+                    .draggable(true)
+                    .title("Lat: ${currentLocation.latitude}, Long: ${currentLocation.longitude}")
+            )
         }
     }
 
@@ -181,6 +201,7 @@ class NewItemActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
+        supportActionBar?.setTitle(R.string.new_car)
         binding.toolbar.setNavigationOnClickListener {
             finish()
         }
@@ -228,7 +249,7 @@ class NewItemActivity : AppCompatActivity() {
         // Retorna o URI para o arquivo
         return FileProvider.getUriForFile(
             this,  // Contexto
-            "com.example.minhaprimeiraapi.fileprovider", // Autoridade
+            "info.celsul.car.fileprovider", // Autoridade
             imageFile!! // O arquivo
         )
     }
@@ -244,7 +265,7 @@ class NewItemActivity : AppCompatActivity() {
     private fun save() {
         if (!validateForm()) return
 
-      //  uploadImageToFirebase()
+       uploadImageToFirebase()
     }
 
     private fun saveData(imageUrl: String) {
@@ -260,9 +281,11 @@ class NewItemActivity : AppCompatActivity() {
             val itemValue = CarItem(
                 id,
                 name,
-                binding.surname.text.toString(),
-                binding.profession.text.toString(),
+                binding.carYear.text.toString(),
                 imageUrl,
+                binding.license.text.toString(),
+
+
 
                  itemPosition,
                             )
@@ -294,20 +317,16 @@ class NewItemActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.error_validate_form, "Name"), Toast.LENGTH_SHORT).show()
             return false
         }
-        if (binding.surname.text.toString().isBlank()) {
-            Toast.makeText(this, getString(R.string.error_validate_form, "Surname"), Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (binding.age.text.toString().isBlank()) {
-            Toast.makeText(this, getString(R.string.error_validate_form, "Age"), Toast.LENGTH_SHORT).show()
+        if (binding.license.text.toString().isBlank()) {
+            Toast.makeText(this, getString(R.string.error_validate_form, "Placa do Veículo"), Toast.LENGTH_SHORT).show()
             return false
         }
         if (imageFile == null) {
             Toast.makeText(this, getString(R.string.error_validate_take_picture), Toast.LENGTH_SHORT).show()
             return false
         }
-        if (binding.profession.text.toString().isBlank()) {
-            Toast.makeText(this, getString(R.string.error_validate_form, "Profession"), Toast.LENGTH_SHORT).show()
+        if (binding.carYear.text.toString().isBlank()) {
+            Toast.makeText(this, getString(R.string.error_validate_form, "Ano de Fabricação"), Toast.LENGTH_SHORT).show()
             return false
         }
         return true

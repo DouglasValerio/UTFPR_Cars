@@ -18,8 +18,8 @@ class CarItemAdapter(
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.image)
         val fullNameTextView: TextView = view.findViewById(R.id.name)
-        val ageTextView: TextView = view.findViewById(R.id.age)
-        val professionTextView: TextView = view.findViewById(R.id.profession)
+        val ageTextView: TextView = view.findViewById(R.id.manufacturingYear)
+        val professionTextView: TextView = view.findViewById(R.id.licensePlate)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {

@@ -1,10 +1,36 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- colors.xml -->
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary Theme Colors -->
+    <color name="colorPrimary">#38726C</color>
+    <color name="colorPrimaryLight">#5F9E98</color>
+    <color name="colorPrimaryDark">#24514C</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <!-- Secondary Theme Colors -->
+    <color name="colorSecondary">#F2A365</color>
+    <color name="colorSecondaryLight">#FFD1A3</color>
+    <color name="colorSecondaryDark">#D0834B</color>
+    <color name="colorOnSecondary">#000000</color>
+
+    <!-- Background and Surface Colors -->
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorBackgroundDark">#121212</color>
+    <color name="colorSurface">#F5F5F5</color>
+    <color name="colorSurfaceDark">#1E1E1E</color>
+    <color name="colorOnBackground">#000000</color>
+    <color name="colorOnSurface">#000000</color>
+    <color name="colorOnBackgroundDark">#FFFFFF</color>
+    <color name="colorOnSurfaceDark">#FFFFFF</color>
+
+    <!-- Accent Colors -->
+    <color name="colorAccent1">#F24C3D</color>
+    <color name="colorAccent2">#F2E85C</color>
+
+    <!-- Neutral Colors -->
+    <color name="colorNeutralLight">#B0B0B0</color>
+    <color name="colorNeutralDark">#303030</color>
+
+    <!-- Error Colors -->
+    <color name="colorError">#B00020</color>
+    <color name="colorOnError">#FFFFFF</color>
 </resources>

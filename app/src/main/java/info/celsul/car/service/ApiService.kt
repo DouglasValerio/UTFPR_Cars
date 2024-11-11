@@ -1,6 +1,7 @@
 package info.celsul.car.service
 
 import info.celsul.car.model.CarItem
+import info.celsul.car.model.CarItemDetail
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,7 +14,7 @@ interface ApiService {
     suspend fun getItems(): List<CarItem>
 
     @GET("car/{id}")
-    suspend fun getItem(@Path("id") id: String): CarItem
+    suspend fun getItem(@Path("id") id: String): CarItemDetail
 
     @DELETE("car/{id}")
     suspend fun deleteItem(@Path("id") id: String)

@@ -1,5 +1,9 @@
 package info.celsul.car
 
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -21,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
 //    private lateinit var signInRequest: BeginSignInRequest
     private val RC_SIGN_IN = 100
     private lateinit var binding: ActivityLoginBinding
-//    private lateinit var googleSignInClient: GoogleSignInClient
+    private var loadingDialog: Dialog? = null
     private lateinit var auth: FirebaseAuth
 //    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
 
@@ -44,23 +48,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupGoogleLogin() {
-//        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//            .requestIdToken("428585243357-h2efd0i7lfiqs0h30vtj1k6pksld6k05.apps.googleusercontent.com")
-//            .requestEmail()
-//            .build()
-//        googleSignInClient = GoogleSignIn.getClient(this, gso)
         auth = FirebaseAuth.getInstance()
-//        googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-//            val task = GoogleSignIn.getSignedInAccountFromIntent(it.data)
-//            try {
-//                val account = task.getResult(ApiException::class.java)
-//                account.idToken?.let { idToken ->
-//                    firebaseAuthWithGoogle(idToken)
-//                }
-//            } catch (e: ApiException) {
-//                Log.e("LoginActivity", "Google sign in failed", e)
-//            }
-//        }
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
@@ -94,9 +82,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupView() {
-//        binding.googleSignInButton.setOnClickListener {
-//            signIn()
-//        }
         binding.btnSendSms.setOnClickListener {
             sendVerificationCode()
         }
@@ -104,8 +89,21 @@ class LoginActivity : AppCompatActivity() {
             verifyCode()
         }
     }
+    private fun showLoadingDialog() {
+        val view = layoutInflater.inflate(R.layout.loading_item, null)
+        loadingDialog = AlertDialog.Builder(this)
+            .setView(view)
+            .setCancelable(false)
+            .create()
+
+        loadingDialog?.show()
+    }
+    private fun hideLoadingDialog() {
+        loadingDialog?.dismiss()
+    }
 
     private fun sendVerificationCode() {
+        showLoadingDialog()
         val phoneNumber = binding.cellphone.text.toString()
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phoneNumber)
@@ -118,6 +116,7 @@ class LoginActivity : AppCompatActivity() {
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
+                    hideLoadingDialog()
                     Toast.makeText(
                         this@LoginActivity,
                         "${e.message}",
@@ -134,6 +133,7 @@ class LoginActivity : AppCompatActivity() {
                     ).show()
                     binding.btnVerifySms.visibility = View.VISIBLE
                     binding.veryfyCode.visibility = View.VISIBLE
+                    hideLoadingDialog()
                 }
 
             })
@@ -142,12 +142,19 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun verifyCode() {
+        showLoadingDialog()
         val verificationCode = binding.veryfyCode.text.toString()
         val credential = PhoneAuthProvider.getCredential(verificationId, verificationCode)
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
+                hideLoadingDialog()
                 onCredentialCompleteListener(task, "Phone Number")
             }
+    }
+
+    companion object {
+
+        fun newIntent(context: Context) = Intent(context, LoginActivity::class.java)
     }
 
 //    private fun signIn() {

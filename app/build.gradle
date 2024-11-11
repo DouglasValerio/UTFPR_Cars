@@ -5,6 +5,33 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
+    }
+}
+def mapsApiKey = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
+def googleServicePath = localProperties.getProperty("GOOGLE_SERVICES_JSON_PATH")
+
+
+if (googleServicePath) {
+    def googleServicesJson = file(googleServicePath)
+
+    if (googleServicesJson.exists()) {
+        copy {
+            from googleServicesJson
+            into "$projectDir"
+            rename { "google-services.json" }
+        }
+    } else {
+        println "Warning: google-services.json not found at specified path: $googleServicePath"
+    }
+} else {
+    println "Warning: GOOGLE_SERVICES_JSON_PATH is not set in local.properties."
+}
+
 android {
     namespace 'info.celsul.car'
     compileSdk 34
@@ -20,6 +47,10 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        manifestPlaceholders = [
+                GOOGLE_MAPS_API_KEY: mapsApiKey
+        ]
     }
 
     buildTypes {
@@ -56,7 +87,6 @@ android {
 
 kapt {
 
-    // Define o diretório onde o Room exportará o esquema do banco de dados
     arguments {
         arg("room.schemaLocation", "$projectDir/schemas")
     }
@@ -94,6 +124,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx:23.1.0'
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'androidx.activity:activity:1.9.3'
+    implementation 'com.google.firebase:firebase-storage-ktx:21.0.1'
     annotationProcessor "androidx.room:room-compiler:2.6.1"
     kapt "androidx.room:room-compiler:2.6.1"
     implementation "androidx.room:room-ktx:2.6.1"
